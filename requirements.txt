@@ -1,28 +1,11 @@
-# ── LLM ──────────────────────────────────────────────────────────────────────
-groq                        # Groq API client (free tier with LLaMA 3)
-
-# ── RAG / LangChain ──────────────────────────────────────────────────────────
-langchain                   # core RAG abstractions
-langchain-community         # loaders, vectorstores, embeddings
-langchain-groq              # LangChain x Groq integration (optional helper)
-
-# ── PDF Loading ───────────────────────────────────────────────────────────────
-pymupdf                     # PyMuPDF — fast PDF parser, preserves page numbers
-
-# ── Embeddings (local, free) ──────────────────────────────────────────────────
-sentence-transformers       # HuggingFace embeddings (all-MiniLM-L6-v2)
-
-# ── Vector Store ──────────────────────────────────────────────────────────────
-chromadb                    # local vector database
-
-# ── Hybrid Search ─────────────────────────────────────────────────────────────
-rank-bm25                   # BM25 keyword search
-
-# ── Frontend ──────────────────────────────────────────────────────────────────
-gradio                      # UI — mentioned in the grading spec
-
-# ── Utilities ─────────────────────────────────────────────────────────────────
-python-dotenv               # load .env variables
-
-langchain-text-splitters
+gradio
+groq
+langchain
+langchain-community
 langchain-huggingface
+langchain-text-splitters
+pymupdf
+sentence-transformers
+chromadb
+rank-bm25
+python-dotenv
