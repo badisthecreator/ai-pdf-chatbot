@@ -1,144 +1,105 @@
-# 1. Install dependencies
-pip install -r requirements.txt
+# 📄 DocuMind AI — Advanced PDF Assistant
 
-# 2. Get a FREE Groq key at console.groq.com
-#    then create your .env file:
-cp .env.example .env
-# paste your key inside .env
+A chatbot that lets you upload a PDF and talk to it. Ask questions, get summaries, find specific info — all without reading the whole document yourself.
 
-# 3. Launch
-python frontend/app.py
-# → open http://localhost:7860
-
-# 📄 AI PDF Chatbot — Advanced RAG
-
-An intelligent chatbot that lets you upload any PDF and have a full conversation about its content.  
-Built with **RAG (Retrieval-Augmented Generation)** — no hallucinations, every answer is grounded in your document.
+Built by **Badis Kefi** for the *l'IA Generative* course — RAG Avance option.
 
 ---
 
-## 🏗️ Architecture
+## What it does
+
+- You upload a PDF
+- You ask questions about it
+- It finds the relevant parts and answers you
+- It shows you which pages it got the answer from
+- It remembers the last few things you said so you can have a real conversation
+
+If you ask something that has nothing to do with the document, it tells you instead of making something up.
+
+---
+
+## Project structure
 
 ```
 ai_pdf_chatbot/
 ├── backend/
-│   ├── config.py        # all configuration constants
-│   ├── ingestion.py     # PDF → chunks → embeddings → ChromaDB
-│   ├── retriever.py     # hybrid search (vector + BM25)
-│   └── rag_chain.py     # RAG pipeline + conversational memory + citations
+│   ├── config.py        # settings (model, chunk size, etc.)
+│   ├── ingestion.py     # loads the PDF and stores it in ChromaDB
+│   ├── retriever.py     # searches the PDF using vector + keyword search
+│   └── rag_chain.py     # builds the prompt and calls the LLM
 ├── frontend/
-│   └── app.py           # Gradio UI
-├── data/                # put test PDFs here(optional)
-├── vectorstore/         # ChromaDB persisted data (auto-created)
-├── .env.example         # copy to .env and add your key
+│   └── app.py           # the Gradio UI
+├── .env.example         # copy this to .env and add your key
 └── requirements.txt
 ```
 
 ---
 
-## ⚙️ RAG Avance Features Implemented
+## How to run it
 
-| Feature | Implementation |
-|---|---|
-| ✅ Advanced chunking with overlap |
-| ✅ Hybrid search | ChromaDB (vector) + BM25 (`rank_bm25`) merged & deduplicated |
-| ✅ Conversational memory | Last 4 turns injected into every prompt |
-| ✅ Source citations | Page number + filename shown under every answer |
-| ✅ Streaming responses | Groq stream=True, tokens displayed progressively |
-| ✅ File upload UI | Gradio file component |
-
----
-
-## 🚀 Setup & Run
-
-### 1. Clone / download the project
+**1. Install dependencies**
 ```bash
-cd ai_pdf_chatbot
+pip install -r requirements.txt
 ```
+> if something is missing just pip install it, no big deal
 
-### 2. Create a virtual environment
-```bash
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
-```
+**2. Get a free Groq API key**
 
-### 3. Install dependencies
-```bash
-pip install -r requirements.txt # if i missed something there don't panic just search it out
-```
+Go to https://console.groq.com, sign up, and copy your key.
 
-### 4. Get a FREE Groq API key
-Go to https://console.groq.com → sign up → copy your API key.
-
-### 5. Configure environment
+**3. Set up your .env file**
 ```bash
 cp .env.example .env
-# Open .env and paste your GROQ_API_KEY
 ```
+Open `.env` and paste your key there.
 
-### 6. Run the app
+**4. Start the app**
 ```bash
 python frontend/app.py
 ```
 
-Open your browser at **http://localhost:7860**
+Then open **http://localhost:7860** in your browser.
 
 ---
 
-## 🔄 How It Works (step by step)
+## How it works under the hood
 
-```
-User uploads PDF
-      │
-      ▼
-[ingestion.py]
-  PyMuPDF loads pages → RecursiveCharacterTextSplitter chunks with overlap
-  → HuggingFace embeds chunks → ChromaDB stores chunks + vectors
-      │
-      ▼
-User asks a question
-      │
-      ▼
-[retriever.py]
-  ChromaDB vector search (top 5)  +  BM25 keyword search (top 5)
-  → Merge & deduplicate → top 5 best chunks
-      │
-      ▼
-[rag_chain.py]
-  Format context (with page numbers) + inject chat history
-  → Build prompt → call Groq LLaMA 3 (stream)
-      │
-      ▼
-[app.py]
-  Stream tokens to Gradio chat → append citations below answer
-```
+When you upload a PDF:
+- PyMuPDF reads all the pages
+- The text gets split into overlapping chunks (so nothing gets cut off mid-sentence)
+- Each chunk gets embedded using a free local model
+- Everything is saved in ChromaDB
+
+When you ask a question:
+- It searches the chunks two ways: by meaning (vector search) and by exact words (BM25)
+- The best chunks from both searches get merged
+- Those chunks + your question + the last few messages get sent to LLaMA 3 via Groq
+- The answer streams back token by token
+- The source pages appear below the answer
 
 ---
 
-## 🧠 Technologies
+## Tech used
 
-| Tool | Role |
+| Thing | What for |
 |---|---|
-| **Groq + LLaMA 3** | Free, ultra-fast LLM API |
-| **LangChain** | RAG pipeline orchestration |
-| **ChromaDB** | Local vector database |
-| **sentence-transformers** | Local embeddings (all-MiniLM-L6-v2) |
-| **rank-bm25** | Keyword search |
-| **PyMuPDF** | PDF loading with page metadata |
-| **Gradio** | Web UI |
+| Groq + LLaMA 3.3 70B | the LLM, free and fast |
+| ChromaDB | stores the vectors locally |
+| all-MiniLM-L6-v2 | local embedding model, no api key needed |
+| rank-bm25 | keyword search on top of vector search |
+| PyMuPDF | reads the PDF and keeps page numbers |
+| LangChain | connects all the pieces together |
+| Gradio | the web interface |
 
 ---
 
-## ⚠️ Known Limitations & Future Improvements
+## Limitations
 
-- **Single PDF at a time**
-- **Local embeddings**: `all-MiniLM-L6-v2` is fast but not the most powerful. Could swap for OpenAI embeddings.
-- **No OCR**: scanned PDFs (image-only) won't be read.
-- **Memory length**: only last 4 turns kept. Long conversations lose early context.
+- One PDF at a time — uploading a new one replaces the old one
+- Scanned PDFs won't work (no OCR)
+- Only the last 4 conversation turns are remembered
+- The embedding model is lightweight so very technical documents might not retrieve perfectly
 
 ---
 
-## 👤 Author
-
-Project built with love for the *l'IA Generative* course.  
-Option chosen: **RAG Avance (/18)**
+*Badis Kefi — l'IA Generative course*
